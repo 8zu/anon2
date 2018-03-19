@@ -1,4 +1,7 @@
 header = "{counter} ：松田亜利沙P {id}人さん"
 
 subscribed = 'I am now subscribed to this channel!'
+ack = 'OK!'
+
 forbidden = 'Sorry, only the owner can subscribe to channel.'
+ineligible = 'Sorry, only {role} may post anonymously'

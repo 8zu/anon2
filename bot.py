@@ -54,12 +54,16 @@ class AnonBot(commands.Bot):
         self.initialized = False
         self.header = texts['header']
         self.counter = 0
+        self.anon_role = None
 
     def is_me(self, author):
         return author == self.user
 
     def is_owner(self, author):
         return self.server and author == self.server.owner
+
+    def is_eligible(self, author):
+        return True
 
     def is_command(self, cmd, s):
         return s.strip().split(' ')[0] == f"{self.command_prefix}{cmd}"
@@ -113,15 +117,23 @@ class AnonBot(commands.Bot):
     def decorated_header(self):
         return '\n'.join(['```css', self.header.format(counter=f'{self.counter:04}', id=random.randint(10000, 99999)), '```'])
 
-    async def erase_and_repost(self, msg):
+    async def forward(self, msg):
         self.counter += 1
         frame = '\n'.join([self.decorated_header(), msg.content])
         await self.send_message(self.main_channel, frame)
+
+    async def erase_and_repost(self, msg):
+        await self.forward(msg)
         await self.delete_message(msg)
 
     @staticmethod
     def record_message(msg):
         logger.info(f"Receive message from {msg.author.name}@{msg.author.id}: {msg.content}")
+
+    @staticmethod
+    def record_dm(dm):
+        logger.info(f"Receive DM from {dm.author.name}@{dm.author.id}: {dm.content}")
+
 
 def initialize(config):
     cache = Cache(config['cache_root'])
@@ -160,6 +172,9 @@ def initialize(config):
 
     @bot.event
     async def on_message(msg):
+        async def say(msg_id, **kwargs):
+            await bot.send_message(bot.main_channel, texts[msg_id].format(**kwargs))
+
         if bot.is_me(msg.author):
             return
         if msg.content == "Please subscribe to here.":
@@ -172,12 +187,19 @@ def initialize(config):
             except NotSubscribedToChannelException:
                 return
             logger.info(f'Subscribed to channel "{bot.main_channel.name}"')
-            await bot.send_message(bot.main_channel, texts['subscribed'])
+            await say('subscribed')
+            return
         if not bot.initialized:
             return
+        if not bot.is_eligible(msg.author):
+            await say('ineligible', role=bot.anon_role)
         if msg.channel == bot.main_channel:
             bot.record_message(msg)
             await bot.erase_and_repost(msg)
+        elif msg.channel.is_private:
+            bot.record_dm(msg)
+            await bot.forward(msg.content)
+            bot.send_message(msg.channel, texts['ack'])
 
     return bot
 
