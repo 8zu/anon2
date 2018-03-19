@@ -163,6 +163,8 @@ def initialize(config):
         if bot.is_me(msg.author):
             return
         if msg.content == "Please subscribe to here.":
+            if not bot.is_owner(msg.author):
+                await bot.send_message(bot.main_channel, texts['forbidden'])
             logger.info('Received initialization command')
             cache.save('main-channel.json', msg.channel.id)
             try:
@@ -170,7 +172,7 @@ def initialize(config):
             except NotSubscribedToChannelException:
                 return
             logger.info(f'Subscribed to channel "{bot.main_channel.name}"')
-            bot.send_message(bot.main_channel, texts['subscribed'])
+            await bot.send_message(bot.main_channel, texts['subscribed'])
         if not bot.initialized:
             return
         if msg.channel == bot.main_channel:

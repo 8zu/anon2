@@ -1,3 +1,4 @@
 header = "{counter} ：松田亜利沙P {id}人さん"
 
 subscribed = 'I am now subscribed to this channel!'
+forbidden = 'Sorry, only the owner can subscribe to channel.'
