@@ -198,8 +198,8 @@ def initialize(config):
             await bot.erase_and_repost(msg)
         elif msg.channel.is_private:
             bot.record_dm(msg)
-            await bot.forward(msg.content)
-            bot.send_message(msg.channel, texts['ack'])
+            await bot.forward(msg)
+            await bot.send_message(msg.channel, texts['ack'])
 
     return bot
 
