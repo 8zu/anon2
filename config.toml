@@ -1,0 +1,5 @@
+token = ""
+
+cache_root = 'cache/'
+text_path = 'langs/test.toml'
+
