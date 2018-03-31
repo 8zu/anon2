@@ -89,12 +89,6 @@ class AnonBot(commands.Bot):
             raise NotJoinedServerException()
         self.member = self.server.get_member(self.user.id)
 
-        perm = self.member.server_permissions
-        if not perm.send_messages:
-            raise MissingPermissionError("send message")
-        if not perm.manage_messages:
-            raise MissingPermissionError("manage messages")
-
         self.main_channel = self.cache.load('main-channel.json') \
                                       .then(self.server.get_channel)
         if self.main_channel.is_none():
@@ -105,6 +99,12 @@ class AnonBot(commands.Bot):
             logger.error('The main channel has been deleted')
             self.cache.purge('main-channel.json')
             raise NotSubscribedToChannelException()
+
+        perm = self.main_channel.permissions_for(self.member)
+        if not perm.send_messages:
+            raise MissingPermissionError("send message")
+        if not perm.manage_messages:
+            raise MissingPermissionError("manage messages")
 
         logger.info("Initialization complete")
         self.initialized = True
@@ -179,7 +179,9 @@ def initialize(config):
             return
         if msg.content == "Please subscribe to here.":
             if not bot.is_owner(msg.author):
-                await bot.send_message(bot.main_channel, texts['forbidden'])
+                if hasattr(bot, "main_channel"):
+                    await bot.send_message(bot.main_channel, texts['forbidden'])
+                return
             logger.info('Received initialization command')
             cache.save('main-channel.json', msg.channel.id)
             try:
